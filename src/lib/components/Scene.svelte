@@ -1,81 +1,100 @@
 <script>
-  import { T } from '@threlte/core'
-  import { ContactShadows, Float, Grid, OrbitControls } from '@threlte/extras'
+  // @ts-nocheck
+  import * as THREE from "three";
+
+  import { T, useFrame } from "@threlte/core";
+  import { Align, OrbitControls } from "@threlte/extras";
+
+  import { getContext, onMount } from "svelte";
+
+  import { vertexOnSphere } from "$lib/utility/utility";
+  import vertexShader from "$lib/shader/vertexShader.glsl";
+  import fragmentShader from "$lib/shader/fragmentShader.glsl";
+
+  import CustomRenderer from "./CustomRenderer.svelte";
+
+  const { data, scales } = getContext("Chart");
+  const geometry = new THREE.BufferGeometry();
+
+  $: ({ depthScale, sizeScale, colorScale, timeScale } = $scales);
+  $: count = $data.length;
+
+  $: positions = new Float32Array(count * 3);
+  $: colors = new Float32Array(count * 3);
+  $: sizes = new Float32Array(count);
+  $: time = new Float32Array(count);
+  let initialColor = new THREE.Color(0xffffff);
+  let scaleFactor = 2;
+  let earthMesh;
+
+  $: $data.forEach((earthquake, i) => {
+    const earthquakeCoordinates = vertexOnSphere(
+      [earthquake.longitude, earthquake.latitude],
+      depthScale(earthquake.depth)
+    );
+
+    positions[i * 3] = earthquakeCoordinates.x;
+    positions[i * 3 + 1] = earthquakeCoordinates.y;
+    positions[i * 3 + 2] = earthquakeCoordinates.z;
+
+    let color = initialColor.setStyle(colorScale(earthquake.magnitude));
+    colors[i * 3] = color.r;
+    colors[i * 3 + 1] = color.g;
+    colors[i * 3 + 2] = color.b;
+
+    sizes[i] = sizeScale(earthquake.magnitude) * scaleFactor;
+    time[i] = timeScale(earthquake.date);
+  });
+
+  $: geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  $: geometry.setAttribute("atDepth", new THREE.BufferAttribute(positions, 3));
+  $: geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
+  $: geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+  $: if (earthMesh) {
+    // Position the mesh within the group to set the pivot offset
+    // earthMesh.position.x += 1; // Adjust this value to move the pivot to the right
+    // Call this after updating positions to ensure the scene is updated
+    earthMesh.updateMatrixWorld();
+  }
+
+  
+  const speed = 0.001; // Speed of the progress increment
+
+  useFrame(({ camera }, delta) => {
+    // Update the progress based on the frame's delta time
+  
+    const progress = earthMesh.material.uniforms.progress.value
+    // Update the shader uniform if the particle system is initialized
+    if (earthMesh.material.uniforms.progress) {
+      // console.log(progress)
+      earthMesh.material.uniforms.progress.value = progress+speed;
+    }
+  });
 </script>
 
-<T.PerspectiveCamera
-  makeDefault
-  position={[-10, 10, 10]}
-  fov={15}
->
-  <OrbitControls
-    autoRotate
-    enableZoom={false}
-    enableDamping
-    autoRotateSpeed={0.5}
-    target.y={1.5}
-  />
+<T.PerspectiveCamera makeDefault position={[10, 10, 40]} fov={45}>
+  <OrbitControls autoRotate />
 </T.PerspectiveCamera>
 
-<T.DirectionalLight
-  intensity={0.8}
-  position.x={5}
-  position.y={10}
-/>
-<T.AmbientLight intensity={0.2} />
+<T.DirectionalLight position.y={10} position.z={10} />
 
-<Grid
-  position.y={-0.001}
-  cellColor="#ffffff"
-  sectionColor="#ffffff"
-  sectionThickness={0}
-  fadeDistance={25}
-  cellSize={2}
-/>
-
-<ContactShadows
-  scale={10}
-  blur={2}
-  far={2.5}
-  opacity={0.5}
-/>
-
-<Float
-  floatIntensity={1}
-  floatingRange={[0, 1]}
->
-  <T.Mesh
-    position.y={1.2}
-    position.z={-0.75}
-  >
-    <T.BoxGeometry />
-    <T.MeshStandardMaterial color="#0059BA" />
-  </T.Mesh>
-</Float>
-
-<Float
-  floatIntensity={1}
-  floatingRange={[0, 1]}
->
-  <T.Mesh
-    position={[1.2, 1.5, 0.75]}
-    rotation.x={5}
-    rotation.y={71}
-  >
-    <T.TorusKnotGeometry args={[0.5, 0.15, 100, 12, 2, 3]} />
-    <T.MeshStandardMaterial color="#F85122" />
-  </T.Mesh>
-</Float>
-
-<Float
-  floatIntensity={1}
-  floatingRange={[0, 1]}
->
-  <T.Mesh
-    position={[-1.4, 1.5, 0.75]}
-    rotation={[-5, 128, 10]}
-  >
-    <T.IcosahedronGeometry />
-    <T.MeshStandardMaterial color="#F8EBCE" />
-  </T.Mesh>
-</Float>
+<!-- <Align> -->
+<T.Points bind:ref={earthMesh}>
+  <T is={geometry} />
+  <T.ShaderMaterial
+    uniforms={{
+      progress: { value: 0 },
+    }}
+    {fragmentShader}
+    {vertexShader}
+    opacity={0.8}
+    vertexColors
+    blending={THREE.AdditiveBlending}
+    depthWrite={false}
+    toneMapped={false}
+  />
+  <!-- <T.PointsMaterial size={0.5} color={"pink"} sizeAttenuation={true} /> -->
+</T.Points>
+<!-- </Align> -->
+<CustomRenderer selectedMesh={earthMesh} />
