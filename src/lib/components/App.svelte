@@ -45,7 +45,7 @@
     sizeScale: d3
       .scaleSqrt()
       .domain(d3.extent($data, (d) => d.magnitude))
-      .range([.2, radius]),
+      .range([1, radius]),
     colorScale: d3
       .scaleSequential(d3[`interpolate${colorSchemes[17]}`])
       .domain(d3.extent($data, (d) => d.magnitude)),

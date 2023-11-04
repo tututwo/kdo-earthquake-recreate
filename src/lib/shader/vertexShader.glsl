@@ -1,9 +1,12 @@
 attribute vec3 atDepth;
+
 attribute float size;
 attribute float time;
 varying vec3 vColor;
 uniform float progress;
-float timeWindow = 0.2;
+uniform float speed;
+uniform float shakeStrength;
+float timeWindow = 0.1;
 
   // Simplex 2D noise
   //
@@ -49,21 +52,16 @@ float nearTime(float eventTime, float progress) {
 
 void main() {
   vColor = color;
-  //! undulating magic. Replace every undulatingProgress to progress to remove the effect
-  float oscillation = sin(mod(progress, 1.0) * 2.0 * 3.14159); // Sine wave between -1 and 1
-  oscillation = oscillation * 0.5 + 0.5; // Shift to range 0 to 1
-  float undulatingProgress = oscillation * 0.2;
-
-  float nearTime = nearTime(time, undulatingProgress);
+  float nearTime = nearTime(time, progress);
   gl_PointSize = max(size, size * nearTime);
-  float noise = snoise(vec2(size, undulatingProgress));
+  float noise = snoise(vec2(size, progress));
 
-  float shakeStrength = float(0.8);
-  float xShake = snoise(vec2(undulatingProgress * 0.1 / 0.002, atDepth.x));
-  float yShake = snoise(vec2(undulatingProgress * 0.1 / 0.002, atDepth.y));
-  float zShake = snoise(vec2(undulatingProgress * 0.1 / 0.002, atDepth.z));
+  float xShake = snoise(vec2(progress * 0.1 / speed, atDepth.x));
+  float yShake = snoise(vec2(progress * 0.1 / speed, atDepth.y));
+  float zShake = snoise(vec2(progress * 0.1 / speed, atDepth.z));
   vec3 shake = vec3(xShake, yShake, zShake);
-  vec3 newPosition = atDepth + shake * shakeStrength * nearTime;
+  vec3 debugShake = vec3(1.0);
+  vec3 newPosition = position + shake * shakeStrength * nearTime;
 
   gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
 }
