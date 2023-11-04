@@ -32,15 +32,15 @@
     bloomEffect.luminancePass.enabled = false;
 
     composer.addPass(new EffectPass(camera, bloomEffect));
-    const glitchEffect = new GlitchEffect({
-      perturbationMap: null, // You can use a texture for more control over the effect
-      chromaticAberrationOffset: new THREE.Vector2(0.005, 0.005), // slight color shift
-      delay: new THREE.Vector2(10.5, 15.5), // random delay interval for glitches
-      duration: new THREE.Vector2(0.6, 1.0), // random duration interval for glitches
-      strength: new THREE.Vector2(0.3, 1.0), // random strength interval for glitches
-      mode: GlitchMode.CONSTANT_MILD, // for sporadic glitches
-    });
-    composer.addPass(new EffectPass(camera, glitchEffect));
+    // const glitchEffect = new GlitchEffect({
+    //   perturbationMap: null, // You can use a texture for more control over the effect
+    //   chromaticAberrationOffset: new THREE.Vector2(0.005, 0.005), // slight color shift
+    //   delay: new THREE.Vector2(10.5, 15.5), // random delay interval for glitches
+    //   duration: new THREE.Vector2(0.6, 1.0), // random duration interval for glitches
+    //   strength: new THREE.Vector2(0.3, 1.0), // random strength interval for glitches
+    //   mode: GlitchMode.CONSTANT_MILD, // for sporadic glitches
+    // });
+    // composer.addPass(new EffectPass(camera, glitchEffect));
   };
 
   $: setupEffectComposer($camera, selectedMesh);

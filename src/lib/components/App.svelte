@@ -65,7 +65,7 @@
   });
   $: chartContext = { scales, data };
   $: setContext("Chart", chartContext);
-  $: console.log(d3.extent($data, (d) => d.date))
+
 </script>
 
 <Canvas>
