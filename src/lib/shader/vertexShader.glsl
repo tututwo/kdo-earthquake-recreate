@@ -6,7 +6,7 @@ varying vec3 vColor;
 uniform float progress;
 uniform float speed;
 uniform float shakeStrength;
-float timeWindow = 0.1;
+uniform float timeWindow;
 
   // Simplex 2D noise
   //
@@ -55,7 +55,9 @@ void main() {
   float nearTime = nearTime(time, progress);
   gl_PointSize = max(size, size * nearTime);
   float noise = snoise(vec2(size, progress));
-
+  // float oscillation = sin(mod(progress, 1.0) * 2.0 * 3.14159); // Sine wave between -1 and 1
+  // oscillation = oscillation * 0.5 + 0.5; // Shift to range 0 to 1
+  // float undulatingProgress = oscillation * 0.2;
   float xShake = snoise(vec2(progress * 0.1 / speed, atDepth.x));
   float yShake = snoise(vec2(progress * 0.1 / speed, atDepth.y));
   float zShake = snoise(vec2(progress * 0.1 / speed, atDepth.z));

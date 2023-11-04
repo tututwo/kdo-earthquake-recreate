@@ -9,6 +9,7 @@
 
   import { vertexOnSphere } from "$lib/utility/utility";
   import vertexShader from "$lib/shader/vertexShader.glsl";
+  // import vertexShader from "$lib/shader/vertexShader-wiggle.glsl";
   import fragmentShader from "$lib/shader/fragmentShader.glsl";
 
   import CustomRenderer from "./CustomRenderer.svelte";
@@ -27,7 +28,6 @@
   let initialColor = new THREE.Color(0xffffff);
   let scaleFactor = 3;
   let earthMesh;
-
 
   $: $data.forEach((earthquake, i) => {
     const earthquakeCoordinates = vertexOnSphere(
@@ -59,31 +59,33 @@
   $: geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
   $: geometry.setAttribute("atDepth", new THREE.BufferAttribute(atDepth, 3));
   $: geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  
   $: geometry.setAttribute("time", new THREE.BufferAttribute(time, 1));
   $: geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
-  onMount(() => {
+  onMount(() =>{
     if (earthMesh) {
       // Position the mesh within the group to set the pivot offset
-      earthMesh.position.x += 1; // Adjust this value to move the pivot to the right
+      // earthMesh.position.x += 1; // Adjust this value to move the pivot to the right
       // Call this after updating positions to ensure the scene is updated
+      console.log(geometry)
       earthMesh.updateMatrixWorld();
     }
-  });
+  })
 
 
-  const speed = 0.1; // Speed of the progress increment
+  const speed = .001; // Speed of the progress increment
   const shakeStrength = 0.2; // Strength of the shake effect[0,2]
+  const timeWindow = 0.1
   useFrame(({ camera }, delta) => {
     // Update the progress based on the frame's delta time
 
     const progress = earthMesh.material.uniforms.progress.value;
-    // Update the shader uniform if the particle system is initialized
+    // // Update the shader uniform if the particle system is initialized
     if (earthMesh.material.uniforms.progress) {
       // console.log(progress)
       earthMesh.material.uniforms.progress.value = progress + speed;
     }
   });
-
 </script>
 
 <T.PerspectiveCamera makeDefault position={[10, 10, 40]} fov={45}>
@@ -98,13 +100,14 @@
 <!-- <T.DirectionalLight position.y={10} position.z={10} /> -->
 
 <!-- <Align> -->
-<T.Points bind:ref={earthMesh}>
+<T.Points position={[-1,0,4]} bind:ref={earthMesh}>
   <T is={geometry} />
   <T.ShaderMaterial
     uniforms={{
       progress: { value: 0 },
       speed: { value: speed },
       shakeStrength: { value: shakeStrength },
+      timeWindow: { value: timeWindow },
     }}
     {vertexShader}
     {fragmentShader}

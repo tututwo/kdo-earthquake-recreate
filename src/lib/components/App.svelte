@@ -36,7 +36,16 @@
   // TODO Save scales and data in stores
   const scales = writable({});
   const data = writable({});
-  $: data.set(earthquake);
+  $: data.set(earthquake.map(d => {
+    return {
+      ...d,
+      date: new Date(d.date),
+      latitude: +d.latitude,
+      longitude: +d.longitude,
+      depth: +d.depth,
+      magnitude: +d.magnitude,
+    }
+  }));
   $: scales.set({
     depthScale: d3
       .scaleLinear()
@@ -50,12 +59,13 @@
       .scaleSequential(d3[`interpolate${colorSchemes[17]}`])
       .domain(d3.extent($data, (d) => d.magnitude)),
     timeScale: d3
-      .scaleLinear()
+      .scaleTime()
       .domain(d3.extent($data, (d) => d.date))
       .range([0, 1]),
   });
   $: chartContext = { scales, data };
   $: setContext("Chart", chartContext);
+  $: console.log(d3.extent($data, (d) => d.date))
 </script>
 
 <Canvas>
