@@ -13,7 +13,7 @@
   import fragmentShader from "$lib/shader/fragmentShader.glsl";
 
   import CustomRenderer from "./CustomRenderer.svelte";
-
+  import Land from "./Land.svelte";
   const { data, scales } = getContext("Chart");
   const geometry = new THREE.BufferGeometry();
 
@@ -59,23 +59,22 @@
   $: geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
   $: geometry.setAttribute("atDepth", new THREE.BufferAttribute(atDepth, 3));
   $: geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-  
+
   $: geometry.setAttribute("time", new THREE.BufferAttribute(time, 1));
   $: geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
-  onMount(() =>{
+  onMount(() => {
     if (earthMesh) {
       // Position the mesh within the group to set the pivot offset
       // earthMesh.position.x += 1; // Adjust this value to move the pivot to the right
       // Call this after updating positions to ensure the scene is updated
-      console.log(geometry)
+
       earthMesh.updateMatrixWorld();
     }
-  })
+  });
 
-
-  const speed = .001; // Speed of the progress increment
+  const speed = 0.001; // Speed of the progress increment
   const shakeStrength = 0.2; // Strength of the shake effect[0,2]
-  const timeWindow = 0.1
+  const timeWindow = 0.1;
   useFrame(({ camera }, delta) => {
     // Update the progress based on the frame's delta time
 
@@ -88,19 +87,14 @@
   });
 </script>
 
-<T.PerspectiveCamera makeDefault position={[10, 10, 40]} fov={45}>
-  <OrbitControls
-    enableZoom={true}
-    enableDamping
-    autoRotate
-    target={[0, 0, 5]}
-  />
+<T.PerspectiveCamera makeDefault position={[0, 0, 30]} fov={45}>
+  <OrbitControls enableZoom={true} enableDamping autoRotate />
 </T.PerspectiveCamera>
 
 <!-- <T.DirectionalLight position.y={10} position.z={10} /> -->
 
 <!-- <Align> -->
-<T.Points position={[-1,0,4]} bind:ref={earthMesh}>
+<T.Points bind:ref={earthMesh}>
   <T is={geometry} />
   <T.ShaderMaterial
     uniforms={{
@@ -142,6 +136,8 @@
   /> -->
   <!-- <T.PointsMaterial size={0.5} color={"pink"} sizeAttenuation={true} /> -->
 </T.Points>
+
+<Land />
 <!-- </Align> -->
 {#if earthMesh}
   <CustomRenderer selectedMesh={earthMesh} />
